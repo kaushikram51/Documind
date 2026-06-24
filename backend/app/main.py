@@ -1,15 +1,16 @@
 from fastapi import FastAPI
+from app.core.config import settings
 
 app = FastAPI(
-    title="DocuMind API",
+    title=f"{settings.app_name} API",
     description="AI-powered knowledge assistant",
-    version="0.1.0"
+    version=settings.app_version
 )
 
 @app.get("/")
 def root():
-    return {"message": "DocuMind API is running"}
+    return {"message": f"{settings.app_name} API is running"}
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "version": "0.1.0"}
+    return {"status": "healthy", "version": settings.app_version}
