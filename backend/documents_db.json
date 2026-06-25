@@ -1,0 +1,22 @@
+{
+  "documents": {
+    "d3a944b455cbea88aca3660c0043fc4d": {
+      "id": "d3a944b455cbea88aca3660c0043fc4d",
+      "filename": "Atomic habits ( PDFDrive ).pdf",
+      "file_type": "pdf",
+      "file_size": 5111325,
+      "chunk_count": 174,
+      "status": "ready",
+      "upload_date": "2026-06-25T23:04:43.471081"
+    },
+    "930fb71b9754fd5244f2e33b4cdd071e": {
+      "id": "930fb71b9754fd5244f2e33b4cdd071e",
+      "filename": "CNSmodule-1.pdf",
+      "file_type": "pdf",
+      "file_size": 4029512,
+      "chunk_count": 9,
+      "status": "ready",
+      "upload_date": "2026-06-25T23:07:14.055302"
+    }
+  }
+}

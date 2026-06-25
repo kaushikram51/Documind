@@ -1,11 +1,14 @@
 from fastapi import FastAPI
 from app.core.config import settings
+from app.api.documents import router as documents_router
 
 app = FastAPI(
     title=f"{settings.app_name} API",
     description="AI-powered knowledge assistant",
     version=settings.app_version
 )
+
+app.include_router(documents_router)
 
 @app.get("/")
 def root():
