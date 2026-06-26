@@ -12,6 +12,7 @@ IMPORTANT RULES:
 2. If the answer is not in the context, say "I don't have enough information in the uploaded documents to answer this"
 3. Always mention which document your answer came from
 4. Be concise and clear
+5. You have access to the conversation history - use it to understand follow-up questions
 
 Context from uploaded documents:
 {context}"""
@@ -25,7 +26,7 @@ def format_context(chunks: list[dict]) -> str:
         )
     return "\n\n".join(context_parts)
 
-def ask_question(question: str) -> dict:
+def ask_question(question: str, conversation_history: list[dict] = None) -> dict:
     """Ask a question and get an AI answer with citations"""
     
     # Step 1 — Find relevant chunks
@@ -40,23 +41,22 @@ def ask_question(question: str) -> dict:
     # Step 2 — Format context
     context = format_context(chunks)
     
-    # Step 3 — Ask Groq
+    # Step 3 — Build messages with history
+    messages = conversation_history or []
+    messages = messages + [{"role": "user", "content": question}]
+    
+    # Step 4 — Ask Groq with full history
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
             {
                 "role": "system",
                 "content": SYSTEM_PROMPT.format(context=context)
-            },
-            {
-                "role": "user",
-                "content": question
             }
-        ],
+        ] + messages,
         max_tokens=1024
     )
     
-    # Step 4 — Return answer with sources
     return {
         "answer": response.choices[0].message.content,
         "sources": [
