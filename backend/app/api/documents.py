@@ -1,5 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from datetime import datetime
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from app.core.dependencies import get_current_user
+
 from app.services.document_service import (
     extract_text_from_pdf, chunk_text, generate_document_id
 )
@@ -18,7 +21,10 @@ ALLOWED_TYPES = ["application/pdf"]
 MAX_QUESTION_LENGTH = 1000
 
 @router.post("/upload")
-async def upload_document(file: UploadFile = File(...)):
+async def upload_document(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
     """Upload and process a document"""
 
     # Validate file type
@@ -93,7 +99,7 @@ async def upload_document(file: UploadFile = File(...)):
     }
 
 @router.get("/")
-def list_documents():
+def list_documents(current_user: dict = Depends(get_current_user)):
     """List all uploaded documents"""
     return get_all_documents()
 
