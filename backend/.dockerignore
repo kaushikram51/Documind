@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+.env
+test.db
+*.json
+chromadb_store/
