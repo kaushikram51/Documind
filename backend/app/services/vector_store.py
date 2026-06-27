@@ -1,18 +1,11 @@
 import chromadb
-from chromadb.utils import embedding_functions
+from chromadb import Settings
 
-# Use a lightweight embedding function
-client = chromadb.PersistentClient(path="./chromadb_store")
-
-# Switch to a smaller, memory-efficient model
-embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-    model_name="all-MiniLM-L6-v2",
-    device="cpu"
-)
+# Use ephemeral client - no embedding function dependency
+client = chromadb.EphemeralClient()
 
 collection = client.get_or_create_collection(
     name="documents",
-    embedding_function=embedding_fn,
     metadata={"hnsw:space": "cosine"}
 )
 
