@@ -1,14 +1,14 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, validator
+from sqlalchemy.orm import Session
+from app.core.database import get_db
+from app.core.dependencies import get_current_user
 from app.services.ai_service import ask_question
-from app.services.conversation_service import (
-    create_conversation, add_message,
-    get_conversation_history, get_all_conversations
+from app.services.database_service import (
+    create_conversation, add_message, get_conversation_history
 )
 
 router = APIRouter(prefix="/chat", tags=["chat"])
-
-MAX_QUESTION_LENGTH = 1000
 
 class QuestionRequest(BaseModel):
     question: str
@@ -18,55 +18,32 @@ class QuestionRequest(BaseModel):
     def validate_question(cls, v):
         if not v.strip():
             raise ValueError("Question cannot be empty")
-        if len(v) > MAX_QUESTION_LENGTH:
-            raise ValueError(f"Question too long. Maximum {MAX_QUESTION_LENGTH} characters.")
+        if len(v) > 1000:
+            raise ValueError("Question too long. Max 1000 characters.")
         return v.strip()
 
 @router.post("/ask")
-def ask(request: QuestionRequest):
-    """Ask a question with conversation memory"""
+def ask(
+    request: QuestionRequest,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    conv_id = request.conversation_id
+    if not conv_id:
+        conv_id = create_conversation(db, current_user["id"])
 
-    # Validate conversation ID if provided
-    if request.conversation_id:
-        history = get_conversation_history(request.conversation_id)
-        if history == []:
-            raise HTTPException(
-                status_code=404,
-                detail="Conversation not found"
-            )
-        conv_id = request.conversation_id
-    else:
-        conv_id = create_conversation()
-        history = []
+    history = get_conversation_history(db, conv_id)
 
-    # Get answer
     try:
         result = ask_question(request.question, history)
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail="AI service error. Please try again."
-        )
+        raise HTTPException(status_code=500, detail="AI service error")
 
-    # Save messages
-    add_message(conv_id, "user", request.question)
-    add_message(conv_id, "assistant", result["answer"])
+    add_message(db, conv_id, "user", request.question)
+    add_message(db, conv_id, "assistant", result["answer"])
 
     return {
         "conversation_id": conv_id,
         "answer": result["answer"],
         "sources": result["sources"]
     }
-
-@router.get("/conversations")
-def list_conversations():
-    """List all conversations"""
-    return get_all_conversations()
-
-@router.get("/conversations/{conv_id}")
-def get_conversation(conv_id: str):
-    """Get full conversation history"""
-    history = get_conversation_history(conv_id)
-    if not history:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-    return {"conversation_id": conv_id, "messages": history}
